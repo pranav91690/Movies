@@ -13,6 +13,7 @@ import EZLoadingActivity
 class MoviesViewController: UIViewController, UITableViewDataSource, UITableViewDelegate{
 
     @IBOutlet weak var tableView: UITableView!
+    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
     // Declare an instance of the UI Refesh Controller
     var refreshController : UIRefreshControl!
@@ -33,11 +34,13 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         // to the table view
         refreshController = UIRefreshControl()
         refreshController.addTarget(self, action: "onRefresh", forControlEvents: UIControlEvents.ValueChanged)
+        refreshController.backgroundColor = UIColor.darkGrayColor()
+        refreshController.tintColor = UIColor.whiteColor()
         tableView.insertSubview(refreshController, atIndex: 0)
         
         // Setup the initial "loading" pop-up
-        //        EZLoadingActivity.show("Loading...", disableUI: false)
-        EZLoadingActivity.show("Loading", disableUI: true)
+        activityIndicator.startAnimating()
+        tableView.hidden = true
         
         // Network Connection
         let apiKey = "a07e22bc18f5cb106bfe4cc1f83ad8ed"
@@ -52,12 +55,12 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         let task : NSURLSessionDataTask = session.dataTaskWithRequest(request,
             completionHandler: { (dataOrNil, response, error) in
                 if let data = dataOrNil {
-//                    EZLoadingActivity.hide()
-                    print("Upload Complete")
                     if let responseDictionary = try! NSJSONSerialization.JSONObjectWithData(
                         data, options:[]) as? NSDictionary {
 //                            NSLog("response: \(responseDictionary)")
-                            
+                            // Bring the Table view back
+                            self.activityIndicator.stopAnimating()
+                            self.tableView.hidden = false
                             // Put the Data into the Movies array
                             self.movies = responseDictionary["results"] as! [NSDictionary]
                             self.tableView.reloadData()
