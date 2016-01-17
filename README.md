@@ -2,7 +2,7 @@
 
 Movies is a movies app using the [The Movie Database API](http://docs.themoviedb.apiary.io/#).
 
-Time spent: 5 hours spent in total
+Time spent: 15 hours spent in total
 
 ## User Stories
 
@@ -15,10 +15,10 @@ The following **required** functionality is complete:
 
 The following **optional** features are implemented:
 
-- [ ] User sees an error message when there's a networking error.
-- [ ] Movies are displayed using a CollectionView instead of a TableView.
-- [ ] User can search for a movie.
-- [ ] All images fade in as they are loading.
+- [X] User sees an error message when there's a networking error.
+- [X] Movies are displayed using a CollectionView instead of a TableView.
+- [X] User can search for a movie.
+- [X] All images fade in as they are loading.
 - [ ] Customize the UI.
 
 The following **additional** features are implemented:
@@ -33,9 +33,19 @@ Here's a walkthrough of implemented user stories:
 
 GIF created with [LiceCap](http://www.cockos.com/licecap/).
 
+## Optional Features
+
+Here's a walkthrough of implemented optional user stories:
+
+<img src='http://i.imgur.com/3vYvXz0.gif' title='Video Walkthrough for Optional User Stories' width='' alt='Video Walkthrough' />
+
+GIF created with [LiceCap](http://www.cockos.com/licecap/).
+
+
 ## Notes
 
-Describe any challenges encountered while building the app.
+got stuck in trying to add a gesture recognizer to a view programatically
+Selection for custom cell view in Collection View. Could not figure out a way to capture the actual index path and not the indexpath in view
 
 ## License
 
