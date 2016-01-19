@@ -24,6 +24,8 @@ class MoviesViewController: UIViewController,UICollectionViewDataSource, UIColle
     
     @IBOutlet weak var searchBarLabel: UIView!
     
+    // End Point to get either the NowPlaying Movies/Top Rated Movies
+    var endPoint : String!
 
     @IBAction func onTap2(sender: AnyObject) {
         self.viewDidLoad()
@@ -78,12 +80,6 @@ class MoviesViewController: UIViewController,UICollectionViewDataSource, UIColle
         flowLayout.minimumInteritemSpacing = 0
         flowLayout.sectionInset = UIEdgeInsets(top: 0,left: 0,bottom: 0,right: 0)
         
-        // Create a gesture recognizer to be added to the collection view
-        let tapGesture : UITapGestureRecognizer!
-        tapGesture = UITapGestureRecognizer(target: self, action: "handleTap:")
-        collectionView.userInteractionEnabled = true
-        collectionView.addGestureRecognizer(tapGesture)
-        
         
         //Setup the Search Controller
         searchController = UISearchController(searchResultsController: nil)
@@ -119,7 +115,7 @@ class MoviesViewController: UIViewController,UICollectionViewDataSource, UIColle
     func networkCall(){
         if(checkForConnection()){
             let apiKey = "a07e22bc18f5cb106bfe4cc1f83ad8ed"
-            let url = NSURL(string:"https://api.themoviedb.org/3/movie/now_playing?api_key=\(apiKey)")
+            let url = NSURL(string:"https://api.themoviedb.org/3/movie/\(endPoint)?api_key=\(apiKey)")
             let request = NSURLRequest(URL: url!)
             let session = NSURLSession(
                 configuration: NSURLSessionConfiguration.defaultSessionConfiguration(),
@@ -193,6 +189,8 @@ class MoviesViewController: UIViewController,UICollectionViewDataSource, UIColle
     
     func collectionView(collectionView: UICollectionView,
         didSelectItemAtIndexPath indexPath: NSIndexPath){
+            // This is getting selected now!! --> How???
+            
             print("Selected")
     }
     
@@ -263,13 +261,7 @@ class MoviesViewController: UIViewController,UICollectionViewDataSource, UIColle
         collectionView.reloadData()
     }
     
-    func handleTap(sender : UITapGestureRecognizer){
-        let tapLocation = sender.locationInView(view)
-        let indexPath:NSIndexPath = self.collectionView.indexPathForItemAtPoint(tapLocation)!
-        let rowNumber = indexPath.row
-        let cell = collectionView.cellForItemAtIndexPath(indexPath)
-        print(indexPath.item)
-    }
+
 //
 //    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int{
 //        if let movies = movies{
@@ -311,6 +303,17 @@ class MoviesViewController: UIViewController,UICollectionViewDataSource, UIColle
         // Pass the selected object to the new view controller.
     }
     */
+    
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        // Basic Way of Moving data from one screen to another
+        
+        let cell = sender as! UICollectionViewCell
+        let indexPath = collectionView.indexPathForCell(cell)
+        let movie = movies![indexPath!.row]
+        
+        let detailViewController = segue.destinationViewController as! DetailViewController
+        detailViewController.movie = movie
+    }
 
 }
 

@@ -16,6 +16,35 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         // Override point for customization after application launch.
+        
+        // Logic to Create the Tab Controllers
+        window = UIWindow(frame: UIScreen.mainScreen().bounds)
+        
+        let storyBoard = UIStoryboard(name: "Main", bundle: nil)
+        
+        // Create the Navigation Controllers and it's associated view controllers
+        let nowPlayingNavigationController = storyBoard.instantiateViewControllerWithIdentifier("moviesNavigationController") as! UINavigationController
+        // Top View Controller is the first view controller that the navigation controller is hooked into
+        let nowPlayingViewController = nowPlayingNavigationController.topViewController as! MoviesViewController
+        nowPlayingViewController.endPoint = "now_playing"
+        nowPlayingNavigationController.tabBarItem.title = "Now Playing"
+//        nowPlayingNavigationController.tabBarItem.image = UIImage(named: "now_playing")
+
+        
+        let topRatedNavigationController = storyBoard.instantiateViewControllerWithIdentifier("moviesNavigationController") as! UINavigationController
+        // Top View Controller is the first view controller that the navigation controller is hooked into
+        let topRatedViewController = topRatedNavigationController.topViewController as! MoviesViewController
+        topRatedViewController.endPoint = "top_rated"
+        topRatedNavigationController.tabBarItem.title = "Top Rated"
+//        topRatedNavigationController.tabBarItem.image = UIImage(named: "top_rated")
+        
+        let tabBarController = UITabBarController()
+        tabBarController.viewControllers = [nowPlayingNavigationController,topRatedNavigationController]
+        
+        // Why this code??? --> What other properties does this window have???
+        window?.rootViewController = tabBarController
+        window?.makeKeyAndVisible()
+        
         return true
     }
 
