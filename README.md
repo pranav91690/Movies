@@ -49,7 +49,7 @@ Selection for custom cell view in Collection View. Could not figure out a way to
 
 # Project 2 - Movies
 
-Time spent: 2 hours spent in total
+Time spent: 10 hours spent in total
 
 ## User Stories
 
@@ -78,6 +78,8 @@ Here's a walkthrough of implemented user stories:
 
 GIF created with [LiceCap](http://www.cockos.com/licecap/).
 
+
+## Flicks Part 2 - Optional Features
 
 Improved Version with optionals implemented:
 
