@@ -57,16 +57,18 @@ The following **required** functionality is completed:
 
 - [X] User can view movie details by tapping on a cell.
 - [X] User can select from a tab bar for either **Now Playing** or **Top Rated** movies.
-- [ ] Customize the selection effect of the cell.
+- [X] Customize the selection effect of the cell.
 
 The following **optional** features are implemented:
 
-- [ ] For the large poster, load the low resolution image first and then switch to the high resolution image when complete.
-- [ ] Customize the navigation bar.
+- [X] For the large poster, load the low resolution image first and then switch to the high resolution image when complete.
+- [X] Customize the navigation bar.
 
 The following **additional** features are implemented:
 
-- [ ] List anything else that you can get done to improve the app functionality!
+- [X] List anything else that you can get done to improve the app functionality!
+    
+    Added the Generes, Runtime and Revenue Data to the Detail Movie View
 
 ## Video Walkthrough 
 
@@ -76,9 +78,17 @@ Here's a walkthrough of implemented user stories:
 
 GIF created with [LiceCap](http://www.cockos.com/licecap/).
 
+
+Improved Version with optionals implemented:
+
+<img src='http://i.imgur.com/GSfREOk.gif' title='Video Walkthrough' width='' alt='Video Walkthrough' />
+
+GIF created with [LiceCap](http://www.cockos.com/licecap/).
+
 ## Notes
 
 Describe any challenges encountered while building the app.
+Working with the content sizes of the scroll view was challenging.
 
 ## License
 

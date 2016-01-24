@@ -13,7 +13,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
-
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         // Override point for customization after application launch.
         
@@ -28,20 +27,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let nowPlayingViewController = nowPlayingNavigationController.topViewController as! MoviesViewController
         nowPlayingViewController.endPoint = "now_playing"
         nowPlayingNavigationController.tabBarItem.title = "Now Playing"
-//        nowPlayingNavigationController.tabBarItem.image = UIImage(named: "now_playing")
-
+        nowPlayingNavigationController.tabBarItem.image = UIImage(named: "now_playing")
         
         let topRatedNavigationController = storyBoard.instantiateViewControllerWithIdentifier("moviesNavigationController") as! UINavigationController
         // Top View Controller is the first view controller that the navigation controller is hooked into
         let topRatedViewController = topRatedNavigationController.topViewController as! MoviesViewController
         topRatedViewController.endPoint = "top_rated"
         topRatedNavigationController.tabBarItem.title = "Top Rated"
-//        topRatedNavigationController.tabBarItem.image = UIImage(named: "top_rated")
+        topRatedNavigationController.tabBarItem.image = UIImage(named: "top_rated")
         
         let tabBarController = UITabBarController()
         tabBarController.viewControllers = [nowPlayingNavigationController,topRatedNavigationController]
         
-        // Why this code??? --> What other properties does this window have???
         window?.rootViewController = tabBarController
         window?.makeKeyAndVisible()
         

@@ -10,8 +10,9 @@ import UIKit
 import AFNetworking
 import EZLoadingActivity
 import SystemConfiguration
+import SwiftyJSON
 
-class MoviesViewController: UIViewController,UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, UISearchResultsUpdating{
+class MoviesViewController: UIViewController,UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, UISearchResultsUpdating, UISearchBarDelegate{
     
 //    @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
@@ -38,9 +39,10 @@ class MoviesViewController: UIViewController,UICollectionViewDataSource, UIColle
     // Declare a Search Controller
     var searchController  : UISearchController!
     
-    // Declare a array of dictionaries to store the movies
-    var movies : [NSDictionary]?
-    var filteredData : [NSDictionary]!
+    // Declare a array of Movie Objects to store the movie Details
+    var movies : [Movie]?
+    var filteredData : [Movie]?
+
     
     func checkForConnection() -> Bool{
         // Check for the Internet Connection
@@ -56,6 +58,23 @@ class MoviesViewController: UIViewController,UICollectionViewDataSource, UIColle
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        // Customize the Navigation Bar Controller
+        if let navigationBar = navigationController?.navigationBar {
+            navigationBar.setBackgroundImage(UIImage(named: "movies_cover"), forBarMetrics: .Default)
+            navigationBar.tintColor = UIColor(red: 1.0, green: 0.25, blue: 0.25, alpha: 0.8)
+
+            let shadow = NSShadow()
+            shadow.shadowColor = UIColor.grayColor().colorWithAlphaComponent(0.5)
+            shadow.shadowOffset = CGSizeMake(2, 2);
+            shadow.shadowBlurRadius = 4;
+            navigationBar.titleTextAttributes = [
+                NSFontAttributeName : UIFont.boldSystemFontOfSize(18),
+                NSForegroundColorAttributeName : UIColor.blackColor(),// UIColor(red: 0.5, green: 0.15, blue: 0.15, alpha: 0.8),
+                NSShadowAttributeName : shadow
+            ]
+        }
+        
         
         // Add the Error Image and TextLabel to the error View
         let errorMessage = UILabel(frame: CGRectMake(130, 5, 100, 20))
@@ -73,8 +92,7 @@ class MoviesViewController: UIViewController,UICollectionViewDataSource, UIColle
         collectionView.delegate = self
         collectionView.dataSource = self
         
-        
-        // Setup the Flow control of the Collection View
+        // Setup the Flow control of the Collection View --> Check out more on this!!
         flowLayout.scrollDirection = .Vertical
         flowLayout.minimumLineSpacing = 0
         flowLayout.minimumInteritemSpacing = 0
@@ -88,24 +106,23 @@ class MoviesViewController: UIViewController,UICollectionViewDataSource, UIColle
         searchController.searchBar.sizeToFit()
         searchController.searchBar.translucent = true
         searchController.searchBar.barTintColor = UIColor.darkGrayColor()
-        
-        searchBarLabel.addSubview(searchController.searchBar)
+        searchController.hidesNavigationBarDuringPresentation = false
+        searchController.searchBar.delegate = self
+        navigationItem.titleView = searchController.searchBar
         automaticallyAdjustsScrollViewInsets = false
         definesPresentationContext = true
         
         
-        // Setup the Flow Controller
+        // Setup the Refresh Controller --> May be you can this to implement that search functionality
         refreshController = UIRefreshControl()
         refreshController.addTarget(self, action: "onRefresh", forControlEvents: UIControlEvents.ValueChanged)
         refreshController.backgroundColor = UIColor.darkGrayColor()
         refreshController.tintColor = UIColor.whiteColor()
-        //        tableView.insertSubview(refreshController, atIndex: 0)
         collectionView.insertSubview(refreshController, atIndex: 0)
         
         
         // Setup the initial "loading" pop-up
         activityIndicator.startAnimating()
-//        tableView.hidden = true
         collectionView.hidden = true
         
         // Network Connection
@@ -126,30 +143,34 @@ class MoviesViewController: UIViewController,UICollectionViewDataSource, UIColle
             let task : NSURLSessionDataTask = session.dataTaskWithRequest(request,
                 completionHandler: { (dataOrNil, response, error) in
                     if let data = dataOrNil {
-                        if let responseDictionary = try! NSJSONSerialization.JSONObjectWithData(
-                            data, options:[]) as? NSDictionary {
-                                //                            NSLog("response: \(responseDictionary)")
-                                // Bring the Table view back
-                                self.activityIndicator.stopAnimating()
-                                //                            self.tableView.hidden = false
-                                self.collectionView.hidden = false
-                                // Put the Data into the Movies array
-                                self.movies = responseDictionary["results"] as! [NSDictionary]
-                                //                            self.tableView.reloadData()
-                                
-                                // Store the Original Data into the filtered data
-                                self.filteredData = self.movies
-                                
-                                self.collectionView.reloadData()
-                                
+                        
+                        // Using the JSON Library
+                        let responseDictionary = JSON(data : data)
+                        self.activityIndicator.stopAnimating()
+                        self.collectionView.hidden = false
+                        
+                        var movies = [Movie]()
+                        // Create the Movie Objects and add them to the movie array
+                        for(_,movie) : (String, JSON) in responseDictionary["results"]{
+                            // Create an movie object for each json
+                            if let _ = movie["title"].string{
+                                let movie = Movie(movie: movie)
+                                movies.append(movie)
+                            }else{
+                                print(movie["titile"].error)
+                            }
                         }
+                        
+                        self.movies = movies
+                        self.filteredData = self.movies
+                        self.collectionView.reloadData()
                     }
             });
             task.resume()
         }
     }
     
-    // Test Funtion for ProtopType
+    // Add a programmatic delay to simualate the reload functionality
     func delay(delay:Double, closure:()->()) {
         dispatch_after(
             dispatch_time(
@@ -187,54 +208,71 @@ class MoviesViewController: UIViewController,UICollectionViewDataSource, UIColle
 
     }
     
-    func collectionView(collectionView: UICollectionView,
-        didSelectItemAtIndexPath indexPath: NSIndexPath){
-            // This is getting selected now!! --> How???
-            
-            print("Selected")
-    }
+
     
     func setMovieCell(cell : MovieCellCView, row : Int) -> MovieCellCView{
-        let base_url = "https://image.tmdb.org/t/p/w342"
-        
+        let base_url_small = "https://image.tmdb.org/t/p/w45"
         if let movie = filteredData?[row]{
-            if let _ = movie["title"] as? String{
-                if let overview = movie["overview"] as? String{
-                    if let poster_path = movie["poster_path"] as? String{
-                        let imageRequest = NSURLRequest(URL: NSURL(string: base_url + poster_path)!)
-                        cell.posterView.setImageWithURLRequest(
-                            imageRequest,
-                            placeholderImage: nil,
-                            success: { (imageRequest, imageResponse, image) -> Void in
-                                // Code to handle success goes here
-                                
-                                if (imageResponse != nil){
-                                    cell.posterView.alpha = 0.0
-                                    cell.posterView.image = image
-                                    UIView.animateWithDuration(0.5, animations: { () -> Void in
-                                        cell.posterView.alpha = 1.0
-                                    })
-                                }else{
-                                    cell.posterView.image = image
-                                }
-                                
-//                                cell.overviewLabel.text = overview
-                            },
-                            failure: { (imageRequest, imageResponse, image) -> Void in
-                                // Code to handle failure goes here --> We can say something like
-                                // poster not available
+            let imageRequest = NSURLRequest(URL: NSURL(string: base_url_small + movie.posterpath)!)
+            cell.posterView.setImageWithURLRequest(imageRequest,placeholderImage: nil,
+                success: { (smallImageRequest, smallImageResponse, smallImage) -> Void in
+                    if (smallImageResponse != nil){
+                        cell.posterView.alpha = 0.0
+                        cell.posterView.image = smallImage
+                        UIView.animateWithDuration(0.5, animations: { () -> Void in
+                            cell.posterView.alpha = 1.0
+                        
+                            // Set the Large image only after the small image is loaded
+                        },completion : { (success) ->  Void in
+                            // Image large image fails to set, set the small image as the image
+                            if(!self.setLargeImage(cell, movie: movie)){
+                                cell.posterView.image = smallImage
+                            }
                         })
-                        cell.overviewLabel.hidden = true
+                    }else{
+                        // Set the Image to Small Image only if getting large image fails
+                        if(!self.setLargeImage(cell, movie: movie)){
+                            cell.posterView.image = smallImage
+                        }
                     }
-                    
-                    // Use the Desciption and animate the picture out of focus and show the description
-                }
-            }
-            
+                },
+                failure: { (imageRequest, imageResponse, image) -> Void in
+                    // Code to handle failure goes here --> We can say something like
+                    // poster not available
+            })
+            cell.overviewLabel.text = movie.movieTitle
+            cell.adult.hidden = !movie.isAdult
+            cell.movieRating.text = String(movie.rating)
         }
-        
+    
         return cell
     }
+        
+    
+        
+    func setLargeImage(cell : MovieCellCView, movie : Movie) -> Bool{
+        let base_url_large = "https://image.tmdb.org/t/p/original"
+        let imageRequestLarge = NSURLRequest(URL: NSURL(string: base_url_large + movie.posterpath)!)
+        var status = false
+        cell.posterView.setImageWithURLRequest(imageRequestLarge,placeholderImage: nil,
+            success: { (largeImageRequest, largeImageResponse, largeImage) -> Void in
+                if largeImageResponse != nil {
+                    cell.posterView.alpha = 0.0
+                    cell.posterView.image = largeImage
+                    UIView.animateWithDuration(0.3, animations: { () -> Void in
+                        cell.posterView.alpha = 1.0
+                    })
+                } else {
+                    cell.posterView.image = largeImage
+                }
+                status = true
+            }, failure: {(largeImageRequest, largeImageResponse, largeImage) -> Void in
+                status = false
+        })
+        
+        return status
+    }
+    
     
     func collectionView(collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAtIndexPath indexPath: NSIndexPath) -> CGSize {
         let totalwidth = collectionView.bounds.size.width;
@@ -243,7 +281,7 @@ class MoviesViewController: UIViewController,UICollectionViewDataSource, UIColle
 
         return CGSizeMake(dimensions, 240)
     }
-    
+        
     
     func updateSearchResultsForSearchController(searchController: UISearchController) {
         let searchText = searchController.searchBar.text
@@ -251,9 +289,8 @@ class MoviesViewController: UIViewController,UICollectionViewDataSource, UIColle
         if(searchText?.isEmpty == false){
             // Update the filtered data using the seachText
             if let movies = movies {
-                filteredData = movies.filter({(movie : NSDictionary) -> Bool in
-                    let title = movie["title"] as! String
-                    return title.rangeOfString(searchText!, options: .CaseInsensitiveSearch) != nil
+                filteredData = movies.filter({(movie : Movie) -> Bool in
+                    return movie.movieTitle.rangeOfString(searchText!, options: .CaseInsensitiveSearch) != nil
                 })
             }
         }
@@ -261,48 +298,24 @@ class MoviesViewController: UIViewController,UICollectionViewDataSource, UIColle
         collectionView.reloadData()
     }
     
-
-//
-//    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int{
-//        if let movies = movies{
-//            return movies.count
-//        }else{
-//            return 0
-//        }
-//    }
-//    
-//    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell{
-//        let cell = tableView.dequeueReusableCellWithIdentifier("MovieCell", forIndexPath:indexPath) as! MovieCell
-//        
-//        let base_url = "https://image.tmdb.org/t/p/w342"
-//        
-//        if let movie = movies?[indexPath.row]{
-//            if let title = movie["title"] as? String{
-//                if let overview = movie["overview"] as? String{
-//                    if let poster_path = movie["poster_path"] as? String{
-//                        let imageUrl = NSURL(string: base_url + poster_path)
-//                        cell.titleLabel.text = title
-//                        cell.overviewLabel.text = overview
-//                        cell.posterView.setImageWithURL(imageUrl!)
-//                    }
-//                }
-//            }
-//
-//        }
-//        
-////        cell.textLabel!.text = title
-//        
-//        return cell
-//    }
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
+    func searchBarCancelButtonClicked(searchBar: UISearchBar){
+        filteredData = movies
+        collectionView.reloadData()
     }
-    */
+    
+    
+    // Method to hande highlight functionality
+    func collectionView(collectionView: UICollectionView,
+        didHighlightItemAtIndexPath indexPath: NSIndexPath){
+    }
+    
+    
+    // Method to handle selected functionality
+    func collectionView(collectionView: UICollectionView,
+        didSelectItemAtIndexPath indexPath: NSIndexPath){
+            // DeSelect the the itw of the index view
+            collectionView.deselectItemAtIndexPath(indexPath, animated: true)
+    }
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         // Basic Way of Moving data from one screen to another
@@ -314,6 +327,7 @@ class MoviesViewController: UIViewController,UICollectionViewDataSource, UIColle
         let detailViewController = segue.destinationViewController as! DetailViewController
         detailViewController.movie = movie
     }
+    
 
 }
 
